@@ -3,6 +3,8 @@ mod routes;
 mod server;
 use tracing_subscriber;
 
+use crate::models::Config;
+
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt()
@@ -11,5 +13,6 @@ async fn main() {
         .json()
         .init();
 
+    Config::load();
     server::run().await;
 }

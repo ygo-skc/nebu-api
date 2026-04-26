@@ -3,6 +3,7 @@ use reqwest::Client;
 use tracing::error;
 use tracing::info;
 
+use crate::models::Config;
 use crate::models::{APIError, APIStatus, PriceParams, TCGPriceRequest};
 
 pub async fn get(Query(params): Query<PriceParams>) -> Result<Json<APIStatus>, APIError> {
@@ -21,7 +22,10 @@ pub async fn get(Query(params): Query<PriceParams>) -> Result<Json<APIStatus>, A
     }
 
     let tcg_res = Client::new()
-        .post("")
+        .post(format!(
+            "https://{}/v1/search/request",
+            Config::load().tcg_price_api_host
+        ))
         .query(&[("q", params.subject), ("isList", "false".to_string())])
         .json(&tcg_req)
         .send()
