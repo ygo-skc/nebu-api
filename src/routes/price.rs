@@ -44,6 +44,14 @@ pub async fn get(Query(params): Query<PriceParams>) -> Result<Json<APIStatus>, A
         });
     }
 
+    let res_str = tcg_res.text().await.map_err(|e| {
+        error!("failed to read response body: {e}");
+        APIError {
+            message: "Error reading response".to_string(),
+        }
+    })?;
+    info!(res_str);
+
     Ok(Json(APIStatus {
         version: env!("CARGO_PKG_VERSION").to_string(),
     }))
