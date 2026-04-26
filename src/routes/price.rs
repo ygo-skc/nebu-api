@@ -1,9 +1,11 @@
 use axum::{Json, extract::Query};
+use reqwest::Client;
+use tracing::error;
 use tracing::info;
 
-use crate::models::{APIStatus, PriceParams, TCGPriceRequest};
+use crate::models::{APIError, APIStatus, PriceParams, TCGPriceRequest};
 
-pub async fn get(Query(params): Query<PriceParams>) -> Json<APIStatus> {
+pub async fn get(Query(params): Query<PriceParams>) -> Result<Json<APIStatus>, APIError> {
     info!(
         subject = %params.subject,
         rarity = ?params.rarity,
@@ -11,9 +13,34 @@ pub async fn get(Query(params): Query<PriceParams>) -> Json<APIStatus> {
         "Fetching card prices"
     );
 
-    let _price_request = TCGPriceRequest::new();
+    let mut tcg_req =
+        TCGPriceRequest::defaults().with_filter_term("productLineName", vec!["yugioh".to_string()]);
 
-    Json(APIStatus {
+    if let Some(rarity) = params.rarity {
+        tcg_req = tcg_req.with_filter_term("rarityName", vec![rarity.to_string()]);
+    }
+
+    let tcg_res = Client::new()
+        .post("")
+        .query(&[("q", params.subject), ("isList", "false".to_string())])
+        .json(&tcg_req)
+        .send()
+        .await
+        .map_err(|e| {
+            error!("request failed: {e}");
+            APIError {
+                message: "Error retrieving prices".to_string(),
+            }
+        })?;
+
+    if tcg_res.status() != 200 {
+        error!("Expected 200 code, but received {}", tcg_res.status());
+        return Err(APIError {
+            message: "Error retrieving prices".to_string(),
+        });
+    }
+
+    Ok(Json(APIStatus {
         version: env!("CARGO_PKG_VERSION").to_string(),
-    })
+    }))
 }
