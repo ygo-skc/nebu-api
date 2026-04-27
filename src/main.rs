@@ -1,9 +1,13 @@
 mod models;
 mod routes;
 mod server;
+use tikv_jemallocator::Jemalloc;
 use tracing_subscriber;
 
 use crate::models::Config;
+
+#[global_allocator]
+static GLOBAL: Jemalloc = Jemalloc;
 
 #[tokio::main]
 async fn main() {
