@@ -15,28 +15,30 @@ pub async fn get(Query(params): Query<PriceParams>) -> Result<Json<APIStatus>, A
         "Fetching card prices"
     );
 
-    let mut tcg_req =
-        TCGPriceRequest::defaults().with_filter_term("productLineName", vec!["yugioh".to_string()]);
+    let tcg_res = { 
+        let mut tcg_req = TCGPriceRequest::defaults()
+            .with_filter_term("productLineName", vec!["yugioh".to_string()]);
 
-    if let Some(rarity) = params.rarity {
-        tcg_req = tcg_req.with_filter_term("rarityName", vec![rarity.to_string()]);
-    }
+        if let Some(rarity) = params.rarity {
+            tcg_req = tcg_req.with_filter_term("rarityName", vec![rarity.to_string()]);
+        }
 
-    let tcg_res = Client::new()
-        .post(format!(
-            "https://{}/v1/search/request",
-            Config::load().tcg_price_api_host
-        ))
-        .query(&[("q", params.subject), ("isList", "false".to_string())])
-        .json(&tcg_req)
-        .send()
-        .await
-        .map_err(|e| {
-            error!("request failed: {e}");
-            APIError {
-                message: "Error retrieving prices".to_string(),
-            }
-        })?;
+        Client::new()
+            .post(format!(
+                "https://{}/v1/search/request",
+                Config::load().tcg_price_api_host
+            ))
+            .query(&[("q", params.subject), ("isList", "false".to_string())])
+            .json(&tcg_req)
+            .send()
+            .await
+            .map_err(|e| {
+                error!("request failed: {e}");
+                APIError {
+                    message: "Error retrieving prices".to_string(),
+                }
+            })?
+    };
 
     if tcg_res.status() != 200 {
         error!("Expected 200 code, but received {}", tcg_res.status());
@@ -45,13 +47,14 @@ pub async fn get(Query(params): Query<PriceParams>) -> Result<Json<APIStatus>, A
         });
     }
 
-    let res = tcg_res.json::<TCGPriceResponse>().await.map_err(|e| {
+    let body = tcg_res.json::<TCGPriceResponse>().await.map_err(|e| {
         error!("Failed to de-searialize response: {e}");
         APIError {
             message: "Error de-searializing price response".to_string(),
         }
     })?;
-    info!(res = ?res, "TCG response");
+
+    info!(res = ?body, "TCG response");
 
     Ok(Json(APIStatus {
         version: env!("CARGO_PKG_VERSION").to_string(),
