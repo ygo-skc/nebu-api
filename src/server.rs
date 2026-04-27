@@ -8,9 +8,12 @@ pub async fn run() {
     let port = 9030;
     tracing::info!("API starting on port {}", port);
 
-    let app = Router::new()
-        .route("/status", get(status::get))
-        .route("/prices", get(price::get));
+    let app = Router::new().nest(
+        "/api/v1",
+        Router::new()
+            .route("/status", get(status::get))
+            .route("/prices", get(price::get)),
+    );
     let listener = TcpListener::bind(format!("0.0.0.0:{}", port))
         .await
         .unwrap();
