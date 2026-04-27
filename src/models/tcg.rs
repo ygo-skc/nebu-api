@@ -99,3 +99,22 @@ impl TCGPriceContext {
         }
     }
 }
+
+#[derive(Deserialize, Debug)]
+pub struct TCGPriceResponse {
+    #[serde(rename = "results")]
+    data: Vec<TCGPriceData>,
+}
+
+#[derive(Deserialize, Debug)]
+struct TCGPriceData {
+    results: Vec<TCGPriceResults>,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+struct TCGPriceResults {
+    lowest_price: Option<f32>,
+    lowest_price_with_shipping: Option<f32>,
+    market_price: Option<f32>,
+}

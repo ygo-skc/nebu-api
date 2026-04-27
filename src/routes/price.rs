@@ -4,6 +4,7 @@ use tracing::error;
 use tracing::info;
 
 use crate::models::Config;
+use crate::models::TCGPriceResponse;
 use crate::models::{APIError, APIStatus, PriceParams, TCGPriceRequest};
 
 pub async fn get(Query(params): Query<PriceParams>) -> Result<Json<APIStatus>, APIError> {
@@ -44,13 +45,13 @@ pub async fn get(Query(params): Query<PriceParams>) -> Result<Json<APIStatus>, A
         });
     }
 
-    let res_str = tcg_res.text().await.map_err(|e| {
-        error!("failed to read response body: {e}");
+    let res = tcg_res.json::<TCGPriceResponse>().await.map_err(|e| {
+        error!("Failed to de-searialize response: {e}");
         APIError {
-            message: "Error reading response".to_string(),
+            message: "Error de-searializing price response".to_string(),
         }
     })?;
-    info!(res_str);
+    info!(res = ?res, "TCG response");
 
     Ok(Json(APIStatus {
         version: env!("CARGO_PKG_VERSION").to_string(),

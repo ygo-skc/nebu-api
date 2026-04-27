@@ -7,3 +7,4 @@ pub use status::APIError;
 pub use status::APIStatus;
 pub use tcg::PriceParams;
 pub use tcg::TCGPriceRequest;
+pub use tcg::TCGPriceResponse;
