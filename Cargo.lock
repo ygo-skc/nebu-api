@@ -733,6 +733,7 @@ dependencies = [
  "serde_json",
  "tikv-jemallocator",
  "tokio",
+ "tower-http",
  "tracing",
  "tracing-subscriber",
 ]
