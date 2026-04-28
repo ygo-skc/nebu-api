@@ -16,7 +16,7 @@ pub async fn get(Query(params): Query<PriceParams>) -> Result<Json<APIStatus>, A
     );
 
     let tcg_res = { 
-        let mut tcg_req = TCGPriceRequest::defaults()
+        let mut tcg_req = TCGPriceRequest::default()
             .with_filter_term("productLineName", vec!["yugioh".to_string()]);
 
         if let Some(rarity) = params.rarity {

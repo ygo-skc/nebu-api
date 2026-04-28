@@ -22,23 +22,25 @@ pub struct TCGPriceRequest {
 }
 
 impl TCGPriceRequest {
-    pub fn defaults() -> Self {
-        Self {
-            algorithm: "sales_dismax".to_string(),
-            from: 0,
-            size: 30,
-            filters: TCGPriceFilters::defaults(),
-            settings: TCGPriceSettings::defaults(),
-            sort: TCGPriceSortOptions::market_price_defaults(),
-            context: TCGPriceContext::us_defaults(),
-        }
-    }
-
     pub fn with_filter_term(mut self, filter_name: &str, filter_values: Vec<String>) -> Self {
         self.filters
             .term
             .insert(filter_name.to_string(), filter_values);
         self
+    }
+}
+
+impl Default for TCGPriceRequest {
+    fn default() -> Self {
+        Self {
+            algorithm: "sales_dismax".to_string(),
+            from: 0,
+            size: 30,
+            filters: TCGPriceFilters::default(),
+            settings: TCGPriceSettings::default(),
+            sort: TCGPriceSortOptions::default(),
+            context: TCGPriceContext::default(),
+        }
     }
 }
 
@@ -48,8 +50,8 @@ struct TCGPriceFilters {
     term: HashMap<String, Vec<String>>,
 }
 
-impl TCGPriceFilters {
-    fn defaults() -> Self {
+impl Default for TCGPriceFilters {
+    fn default() -> Self {
         Self {
             term: HashMap::new(),
         }
@@ -62,8 +64,8 @@ struct TCGPriceSettings {
     use_fuzzy_search: bool,
 }
 
-impl TCGPriceSettings {
-    fn defaults() -> Self {
+impl Default for TCGPriceSettings {
+    fn default() -> Self {
         Self {
             use_fuzzy_search: false,
         }
@@ -77,8 +79,8 @@ struct TCGPriceSortOptions {
     order: String,
 }
 
-impl TCGPriceSortOptions {
-    fn market_price_defaults() -> Self {
+impl Default for TCGPriceSortOptions {
+    fn default() -> Self {
         Self {
             field: "market-price".to_string(),
             order: "desc".to_string(),
@@ -92,8 +94,8 @@ struct TCGPriceContext {
     shipping_country: String,
 }
 
-impl TCGPriceContext {
-    fn us_defaults() -> Self {
+impl Default for TCGPriceContext {
+    fn default() -> Self {
         Self {
             shipping_country: "US".to_string(),
         }
