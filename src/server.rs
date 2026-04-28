@@ -4,6 +4,7 @@ use axum::{
 };
 use reqwest::Method;
 use tokio::net::TcpListener;
+use tower_http::compression::{CompressionLayer, predicate::SizeAbove};
 use tower_http::cors::{Any, CorsLayer};
 
 use crate::routes::price;
@@ -30,8 +31,9 @@ pub async fn run() {
                 .route("/status", get(status::get))
                 .route("/prices", get(price::get)),
         )
+        .layer(middleware::from_fn(common_res_headers))
         .layer(cors)
-        .layer(middleware::from_fn(common_middleware));
+        .layer(CompressionLayer::new().compress_when(SizeAbove::new(1024)));
 
     let listener = TcpListener::bind(format!("0.0.0.0:{}", port))
         .await
@@ -40,7 +42,7 @@ pub async fn run() {
     serve(listener, app).await.unwrap();
 }
 
-async fn common_middleware(req: Request<Body>, next: Next) -> Response {
+async fn common_res_headers(req: Request<Body>, next: Next) -> Response {
     let mut res = next.run(req).await;
 
     let headers = res.headers_mut();
