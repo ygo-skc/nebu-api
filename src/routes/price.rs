@@ -1,13 +1,14 @@
 use axum::{Json, extract::Query};
 use reqwest::Client;
+use reqwest::Response;
 use tracing::error;
 use tracing::info;
 
-use crate::models::Config;
-use crate::models::TCGPriceResponse;
-use crate::models::{APIError, APIStatus, PriceParams, TCGPriceRequest};
+use crate::models::{
+    APIError, CardPrice, CardPriceResponse, Config, PriceParams, TCGPriceRequest, TCGPriceResponse,
+};
 
-pub async fn get(Query(params): Query<PriceParams>) -> Result<Json<APIStatus>, APIError> {
+pub async fn get(Query(params): Query<PriceParams>) -> Result<Json<CardPriceResponse>, APIError> {
     info!(
         subject = %params.subject,
         rarities = ?params.rarities,
@@ -15,7 +16,7 @@ pub async fn get(Query(params): Query<PriceParams>) -> Result<Json<APIStatus>, A
         "Fetching card prices"
     );
 
-    let tcg_res = {
+    let res = {
         let mut tcg_req = TCGPriceRequest::default().with_yugioh_product_line();
 
         if let Some(rarities) = params.rarities {
@@ -39,6 +40,27 @@ pub async fn get(Query(params): Query<PriceParams>) -> Result<Json<APIStatus>, A
             })?
     };
 
+    let tcg_price_res = handle_errors(res).await?;
+    let card_prices: Vec<CardPrice> = tcg_price_res.data[0]
+        .results
+        .iter()
+        .filter_map(|item| {
+            Some(CardPrice {
+                set: item.set_name.clone(),
+                rarity: item.rarity_name.clone()?,
+                market_price: item
+                    .market_price
+                    .unwrap_or(item.lowest_price_with_shipping.unwrap_or_default()),
+            })
+        })
+        .collect();
+
+    Ok(Json(CardPriceResponse {
+        prices: card_prices,
+    }))
+}
+
+async fn handle_errors(tcg_res: Response) -> Result<TCGPriceResponse, APIError> {
     if tcg_res.status() != 200 {
         error!("Expected 200 code, but received {}", tcg_res.status());
         return Err(APIError {
@@ -53,9 +75,16 @@ pub async fn get(Query(params): Query<PriceParams>) -> Result<Json<APIStatus>, A
         }
     })?;
 
-    info!(res = ?body, "TCG response");
+    let num_data_elements = body.data.len();
+    if num_data_elements != 1 {
+        error!(
+            "Number of data elements isn't 1 as expected. It's {}",
+            num_data_elements,
+        );
+        return Err(APIError {
+            message: "Unexpected TCG price response state".to_string(),
+        });
+    }
 
-    Ok(Json(APIStatus {
-        version: env!("CARGO_PKG_VERSION").to_string(),
-    }))
+    Ok(body)
 }

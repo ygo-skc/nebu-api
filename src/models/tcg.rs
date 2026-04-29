@@ -181,20 +181,22 @@ impl Default for TCGPriceContext {
 #[derive(Deserialize, Debug)]
 pub struct TCGPriceResponse {
     #[serde(rename = "results")]
-    data: Vec<TCGPriceData>,
+    pub data: Vec<TCGPriceData>,
 }
 
 #[allow(dead_code)]
 #[derive(Deserialize, Debug)]
-struct TCGPriceData {
-    results: Vec<TCGPriceResults>,
+pub struct TCGPriceData {
+    pub results: Vec<TCGPriceResults>,
 }
 
 #[allow(dead_code)]
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
-struct TCGPriceResults {
-    lowest_price: Option<f32>,
-    lowest_price_with_shipping: Option<f32>,
-    market_price: Option<f32>,
+pub struct TCGPriceResults {
+    pub set_name: String,
+    pub rarity_name: Option<String>,
+    pub lowest_price: Option<f32>,
+    pub lowest_price_with_shipping: Option<f32>,
+    pub market_price: Option<f32>,
 }
