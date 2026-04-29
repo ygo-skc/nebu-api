@@ -16,6 +16,7 @@ pub struct TCGPriceRequest {
     from: u8,
     size: u8,
     filters: TCGPriceFilters,
+    listing_search: TCGListingSearch,
     settings: TCGPriceSettings,
     sort: TCGPriceSortOptions,
     context: TCGPriceContext,
@@ -48,6 +49,7 @@ impl Default for TCGPriceRequest {
             from: 0,
             size: 30,
             filters: TCGPriceFilters::default(),
+            listing_search: TCGListingSearch::default(),
             settings: TCGPriceSettings::default(),
             sort: TCGPriceSortOptions::default(),
             context: TCGPriceContext::default(),
@@ -65,6 +67,64 @@ impl Default for TCGPriceFilters {
     fn default() -> Self {
         Self {
             term: HashMap::new(),
+        }
+    }
+}
+
+#[derive(Serialize)]
+struct TCGListingSearch {
+    filters: TCGListingSearchFilters,
+}
+
+impl Default for TCGListingSearch {
+    fn default() -> Self {
+        Self {
+            filters: TCGListingSearchFilters::default(),
+        }
+    }
+}
+
+#[derive(Serialize)]
+struct TCGListingSearchFilters {
+    term: TCGListingSearchFilterTerm,
+    exclude: TCGListingSearchFilterExclusions,
+}
+
+impl Default for TCGListingSearchFilters {
+    fn default() -> Self {
+        Self {
+            term: TCGListingSearchFilterTerm::default(),
+            exclude: TCGListingSearchFilterExclusions::default(),
+        }
+    }
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct TCGListingSearchFilterTerm {
+    seller_status: String,
+    channel_id: u8,
+}
+
+impl Default for TCGListingSearchFilterTerm {
+    fn default() -> Self {
+        Self {
+            seller_status: "Live".to_string(),
+            channel_id: 0,
+        }
+    }
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct TCGListingSearchFilterExclusions {
+    channel_exclusion: u8,
+}
+
+impl Default for TCGListingSearchFilterExclusions {
+    fn default() -> Self {
+        Self {
+            channel_exclusion: 0,
         }
     }
 }
