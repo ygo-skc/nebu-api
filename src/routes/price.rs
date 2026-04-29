@@ -26,9 +26,13 @@ pub async fn get_card_prices(Query(params): Query<PriceParams>) -> Result<Json<C
         let mut tcg_req = TCGPriceRequest::default().with_yugioh_product_line();
 
         if let Some(rarities) = params.rarities {
-            tcg_req = tcg_req.with_rarities(vec![rarities.to_string()]);
+            tcg_req = tcg_req.with_rarities(rarities.split(",").map(String::from).collect());
+        }
+        if let Some(sets) = params.sets {
+            tcg_req = tcg_req.with_sets(sets.split(",").map(String::from).collect())
         }
 
+        let tcg_req = tcg_req;
         Client::new()
             .post(format!("https://{}/v1/search/request", Config::load().tcg_price_api_host))
             .query(&[("q", params.subject), ("isList", "false".to_string())])
@@ -43,20 +47,9 @@ pub async fn get_card_prices(Query(params): Query<PriceParams>) -> Result<Json<C
             })?
     };
 
-    let tcg_price_res = handle_errors(res).await?;
-    let card_prices: Vec<CardPrice> = tcg_price_res.data[0]
-        .results
-        .iter()
-        .filter_map(|item| {
-            Some(CardPrice {
-                set: item.set_name.clone(),
-                rarity: item.rarity_name.clone()?,
-                market_price: item.market_price.unwrap_or(item.lowest_price_with_shipping.unwrap_or_default()),
-            })
-        })
-        .collect();
-
-    Ok(Json(CardPriceResponse { prices: card_prices }))
+    Ok(Json(CardPriceResponse {
+        prices: parse_tcg_card_prices(handle_errors(res).await?),
+    }))
 }
 
 async fn handle_errors(tcg_res: Response) -> Result<TCGPriceResponse, APIError> {
@@ -83,4 +76,18 @@ async fn handle_errors(tcg_res: Response) -> Result<TCGPriceResponse, APIError> 
     }
 
     Ok(body)
+}
+
+fn parse_tcg_card_prices(tcg_prices: TCGPriceResponse) -> Vec<CardPrice> {
+    tcg_prices.data[0]
+        .results
+        .iter()
+        .filter_map(|item| {
+            Some(CardPrice {
+                set: item.set_name.clone(),
+                rarity: item.rarity_name.clone()?,
+                market_price: item.market_price.unwrap_or(item.lowest_price?),
+            })
+        })
+        .collect()
 }

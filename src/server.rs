@@ -25,8 +25,8 @@ pub async fn run() {
         .nest(
             "/api/v1",
             Router::new()
-                .route("/status", get(status::get))
-                .route("/prices", get(price::get)),
+                .route("/status", get(status::get_status))
+                .route("/card/prices", get(price::get_card_prices)),
         )
         .layer(middleware::from_fn(common_res_headers))
         .layer(cors)
