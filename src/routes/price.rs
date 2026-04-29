@@ -1,16 +1,24 @@
 use axum::{Json, extract::Query};
 use reqwest::Client;
 use reqwest::Response;
+use serde::Deserialize;
 use tracing::error;
 use tracing::info;
 
-use crate::models::{APIError, CardPrice, CardPriceResponse, Config, PriceParams, TCGPriceRequest, TCGPriceResponse};
+use crate::models::{APIError, CardPrice, CardPriceResponse, Config, TCGPriceRequest, TCGPriceResponse};
 
-pub async fn get(Query(params): Query<PriceParams>) -> Result<Json<CardPriceResponse>, APIError> {
+#[derive(Deserialize)]
+pub struct PriceParams {
+    subject: String,
+    rarities: Option<String>,
+    sets: Option<String>,
+}
+
+pub async fn get_card_prices(Query(params): Query<PriceParams>) -> Result<Json<CardPriceResponse>, APIError> {
     info!(
         subject = %params.subject,
-        rarities = ?params.rarities,
-        product = ?params.product,
+        rarities = params.rarities,
+        sets = params.sets,
         "Fetching card prices"
     );
 

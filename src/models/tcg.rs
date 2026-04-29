@@ -2,13 +2,6 @@ use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize)]
-pub struct PriceParams {
-    pub subject: String,
-    pub rarities: Option<String>,
-    pub product: Option<String>,
-}
-
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TCGPriceRequest {
