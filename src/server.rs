@@ -14,15 +14,9 @@ pub async fn run() {
     let cors = CorsLayer::new()
         .allow_origin([
             "http://localhost:3000".parse().unwrap(),
-            "https://dev.thesupremekingscastle.com"
-                .parse()
-                .unwrap(),
-            "https://thesupremekingscastle.com"
-                .parse()
-                .unwrap(),
-            "https://www.thesupremekingscastle.com"
-                .parse()
-                .unwrap(),
+            "https://dev.thesupremekingscastle.com".parse().unwrap(),
+            "https://thesupremekingscastle.com".parse().unwrap(),
+            "https://www.thesupremekingscastle.com".parse().unwrap(),
         ])
         .allow_methods([Method::GET, Method::POST, Method::OPTIONS])
         .allow_headers(Any);
@@ -38,9 +32,7 @@ pub async fn run() {
         .layer(cors)
         .layer(CompressionLayer::new().compress_when(SizeAbove::new(1024)));
 
-    let listener = TcpListener::bind(format!("0.0.0.0:{}", port))
-        .await
-        .unwrap();
+    let listener = TcpListener::bind(format!("0.0.0.0:{}", port)).await.unwrap();
 
     serve(listener, app).await.unwrap();
 }

@@ -32,16 +32,12 @@ impl TCGPriceRequest {
     }
 
     pub fn with_rarities(mut self, rarities: Vec<String>) -> Self {
-        self.filters
-            .term
-            .insert("rarityName".to_string(), rarities);
+        self.filters.term.insert("rarityName".to_string(), rarities);
         self
     }
 
     pub fn with_sets(mut self, sets: Vec<String>) -> Self {
-        self.filters
-            .term
-            .insert("setName".to_string(), sets);
+        self.filters.term.insert("setName".to_string(), sets);
         self
     }
 }

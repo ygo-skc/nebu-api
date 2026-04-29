@@ -43,10 +43,7 @@ pub async fn get(Query(params): Query<PriceParams>) -> Result<Json<CardPriceResp
             Some(CardPrice {
                 set: item.set_name.clone(),
                 rarity: item.rarity_name.clone()?,
-                market_price: item.market_price.unwrap_or(
-                    item.lowest_price_with_shipping
-                        .unwrap_or_default(),
-                ),
+                market_price: item.market_price.unwrap_or(item.lowest_price_with_shipping.unwrap_or_default()),
             })
         })
         .collect();
@@ -62,15 +59,12 @@ async fn handle_errors(tcg_res: Response) -> Result<TCGPriceResponse, APIError> 
         });
     }
 
-    let body = tcg_res
-        .json::<TCGPriceResponse>()
-        .await
-        .map_err(|e| {
-            error!("Failed to de-searialize response: {e}");
-            APIError {
-                message: "Error de-searializing price response".to_string(),
-            }
-        })?;
+    let body = tcg_res.json::<TCGPriceResponse>().await.map_err(|e| {
+        error!("Failed to de-searialize response: {e}");
+        APIError {
+            message: "Error de-searializing price response".to_string(),
+        }
+    })?;
 
     let num_data_elements = body.data.len();
     if num_data_elements != 1 {
