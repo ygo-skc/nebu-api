@@ -41,18 +41,12 @@ pub async fn get(Query(params): Query<PriceParams>) -> Result<Json<CardPriceResp
         .iter()
         .filter_map(|item| {
             Some(CardPrice {
-                set: item
-                    .set_name
-                    .clone(),
-                rarity: item
-                    .rarity_name
-                    .clone()?,
-                market_price: item
-                    .market_price
-                    .unwrap_or(
-                        item.lowest_price_with_shipping
-                            .unwrap_or_default(),
-                    ),
+                set: item.set_name.clone(),
+                rarity: item.rarity_name.clone()?,
+                market_price: item.market_price.unwrap_or(
+                    item.lowest_price_with_shipping
+                        .unwrap_or_default(),
+                ),
             })
         })
         .collect();
@@ -78,9 +72,7 @@ async fn handle_errors(tcg_res: Response) -> Result<TCGPriceResponse, APIError> 
             }
         })?;
 
-    let num_data_elements = body
-        .data
-        .len();
+    let num_data_elements = body.data.len();
     if num_data_elements != 1 {
         error!("Number of data elements isn't 1 as expected. It's {}", num_data_elements,);
         return Err(APIError {

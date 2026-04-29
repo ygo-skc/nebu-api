@@ -13,9 +13,7 @@ pub async fn run() {
 
     let cors = CorsLayer::new()
         .allow_origin([
-            "http://localhost:3000"
-                .parse()
-                .unwrap(),
+            "http://localhost:3000".parse().unwrap(),
             "https://dev.thesupremekingscastle.com"
                 .parse()
                 .unwrap(),
@@ -44,29 +42,15 @@ pub async fn run() {
         .await
         .unwrap();
 
-    serve(listener, app)
-        .await
-        .unwrap();
+    serve(listener, app).await.unwrap();
 }
 
 async fn common_res_headers(req: Request<Body>, next: Next) -> Response {
-    let mut res = next
-        .run(req)
-        .await;
+    let mut res = next.run(req).await;
 
     let headers = res.headers_mut();
-    headers.insert(
-        "Content-Type",
-        "application/json"
-            .parse()
-            .unwrap(),
-    );
-    headers.insert(
-        "Cache-Control",
-        "max-age=300"
-            .parse()
-            .unwrap(),
-    );
+    headers.insert("Content-Type", "application/json".parse().unwrap());
+    headers.insert("Cache-Control", "max-age=300".parse().unwrap());
 
     res
 }
