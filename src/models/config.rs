@@ -13,8 +13,7 @@ impl Config {
             let env_file_name = var("NEBU_API_DOT_ENV_FILE").unwrap_or(".env".to_string());
             dotenvy::from_filename(env_file_name).ok();
             Config {
-                tcg_price_api_host: var("TCG_PRICE_API_HOST")
-                    .expect("Missing TCG Pricing API url in env file"),
+                tcg_price_api_host: var("TCG_PRICE_API_HOST").expect("Missing TCG Pricing API url in env file"),
             }
         })
     }

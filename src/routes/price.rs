@@ -4,9 +4,7 @@ use reqwest::Response;
 use tracing::error;
 use tracing::info;
 
-use crate::models::{
-    APIError, CardPrice, CardPriceResponse, Config, PriceParams, TCGPriceRequest, TCGPriceResponse,
-};
+use crate::models::{APIError, CardPrice, CardPriceResponse, Config, PriceParams, TCGPriceRequest, TCGPriceResponse};
 
 pub async fn get(Query(params): Query<PriceParams>) -> Result<Json<CardPriceResponse>, APIError> {
     info!(
@@ -24,10 +22,7 @@ pub async fn get(Query(params): Query<PriceParams>) -> Result<Json<CardPriceResp
         }
 
         Client::new()
-            .post(format!(
-                "https://{}/v1/search/request",
-                Config::load().tcg_price_api_host
-            ))
+            .post(format!("https://{}/v1/search/request", Config::load().tcg_price_api_host))
             .query(&[("q", params.subject), ("isList", "false".to_string())])
             .json(&tcg_req)
             .send()
@@ -46,18 +41,23 @@ pub async fn get(Query(params): Query<PriceParams>) -> Result<Json<CardPriceResp
         .iter()
         .filter_map(|item| {
             Some(CardPrice {
-                set: item.set_name.clone(),
-                rarity: item.rarity_name.clone()?,
+                set: item
+                    .set_name
+                    .clone(),
+                rarity: item
+                    .rarity_name
+                    .clone()?,
                 market_price: item
                     .market_price
-                    .unwrap_or(item.lowest_price_with_shipping.unwrap_or_default()),
+                    .unwrap_or(
+                        item.lowest_price_with_shipping
+                            .unwrap_or_default(),
+                    ),
             })
         })
         .collect();
 
-    Ok(Json(CardPriceResponse {
-        prices: card_prices,
-    }))
+    Ok(Json(CardPriceResponse { prices: card_prices }))
 }
 
 async fn handle_errors(tcg_res: Response) -> Result<TCGPriceResponse, APIError> {
@@ -68,19 +68,21 @@ async fn handle_errors(tcg_res: Response) -> Result<TCGPriceResponse, APIError> 
         });
     }
 
-    let body = tcg_res.json::<TCGPriceResponse>().await.map_err(|e| {
-        error!("Failed to de-searialize response: {e}");
-        APIError {
-            message: "Error de-searializing price response".to_string(),
-        }
-    })?;
+    let body = tcg_res
+        .json::<TCGPriceResponse>()
+        .await
+        .map_err(|e| {
+            error!("Failed to de-searialize response: {e}");
+            APIError {
+                message: "Error de-searializing price response".to_string(),
+            }
+        })?;
 
-    let num_data_elements = body.data.len();
+    let num_data_elements = body
+        .data
+        .len();
     if num_data_elements != 1 {
-        error!(
-            "Number of data elements isn't 1 as expected. It's {}",
-            num_data_elements,
-        );
+        error!("Number of data elements isn't 1 as expected. It's {}", num_data_elements,);
         return Err(APIError {
             message: "Unexpected TCG price response state".to_string(),
         });

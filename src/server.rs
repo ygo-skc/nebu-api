@@ -1,7 +1,4 @@
-use axum::{
-    Router, body::Body, http::Request, middleware, middleware::Next, response::Response,
-    routing::get, serve,
-};
+use axum::{Router, body::Body, http::Request, middleware, middleware::Next, response::Response, routing::get, serve};
 use reqwest::Method;
 use tokio::net::TcpListener;
 use tower_http::compression::{CompressionLayer, predicate::SizeAbove};
@@ -16,10 +13,18 @@ pub async fn run() {
 
     let cors = CorsLayer::new()
         .allow_origin([
-            "http://localhost:3000".parse().unwrap(),
-            "https://dev.thesupremekingscastle.com".parse().unwrap(),
-            "https://thesupremekingscastle.com".parse().unwrap(),
-            "https://www.thesupremekingscastle.com".parse().unwrap(),
+            "http://localhost:3000"
+                .parse()
+                .unwrap(),
+            "https://dev.thesupremekingscastle.com"
+                .parse()
+                .unwrap(),
+            "https://thesupremekingscastle.com"
+                .parse()
+                .unwrap(),
+            "https://www.thesupremekingscastle.com"
+                .parse()
+                .unwrap(),
         ])
         .allow_methods([Method::GET, Method::POST, Method::OPTIONS])
         .allow_headers(Any);
@@ -39,15 +44,29 @@ pub async fn run() {
         .await
         .unwrap();
 
-    serve(listener, app).await.unwrap();
+    serve(listener, app)
+        .await
+        .unwrap();
 }
 
 async fn common_res_headers(req: Request<Body>, next: Next) -> Response {
-    let mut res = next.run(req).await;
+    let mut res = next
+        .run(req)
+        .await;
 
     let headers = res.headers_mut();
-    headers.insert("Content-Type", "application/json".parse().unwrap());
-    headers.insert("Cache-Control", "max-age=300".parse().unwrap());
+    headers.insert(
+        "Content-Type",
+        "application/json"
+            .parse()
+            .unwrap(),
+    );
+    headers.insert(
+        "Cache-Control",
+        "max-age=300"
+            .parse()
+            .unwrap(),
+    );
 
     res
 }

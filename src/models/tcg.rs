@@ -32,12 +32,16 @@ impl TCGPriceRequest {
     }
 
     pub fn with_rarities(mut self, rarities: Vec<String>) -> Self {
-        self.filters.term.insert("rarityName".to_string(), rarities);
+        self.filters
+            .term
+            .insert("rarityName".to_string(), rarities);
         self
     }
 
     pub fn with_sets(mut self, sets: Vec<String>) -> Self {
-        self.filters.term.insert("setName".to_string(), sets);
+        self.filters
+            .term
+            .insert("setName".to_string(), sets);
         self
     }
 }
@@ -65,9 +69,7 @@ struct TCGPriceFilters {
 
 impl Default for TCGPriceFilters {
     fn default() -> Self {
-        Self {
-            term: HashMap::new(),
-        }
+        Self { term: HashMap::new() }
     }
 }
 
@@ -123,9 +125,7 @@ struct TCGListingSearchFilterExclusions {
 
 impl Default for TCGListingSearchFilterExclusions {
     fn default() -> Self {
-        Self {
-            channel_exclusion: 0,
-        }
+        Self { channel_exclusion: 0 }
     }
 }
 
@@ -137,9 +137,7 @@ struct TCGPriceSettings {
 
 impl Default for TCGPriceSettings {
     fn default() -> Self {
-        Self {
-            use_fuzzy_search: false,
-        }
+        Self { use_fuzzy_search: false }
     }
 }
 
