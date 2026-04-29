@@ -10,17 +10,16 @@ use crate::models::{APIError, APIStatus, PriceParams, TCGPriceRequest};
 pub async fn get(Query(params): Query<PriceParams>) -> Result<Json<APIStatus>, APIError> {
     info!(
         subject = %params.subject,
-        rarity = ?params.rarity,
+        rarities = ?params.rarities,
         product = ?params.product,
         "Fetching card prices"
     );
 
-    let tcg_res = { 
-        let mut tcg_req = TCGPriceRequest::default()
-            .with_filter_term("productLineName", vec!["yugioh".to_string()]);
+    let tcg_res = {
+        let mut tcg_req = TCGPriceRequest::default().with_yugioh_product_line();
 
-        if let Some(rarity) = params.rarity {
-            tcg_req = tcg_req.with_filter_term("rarityName", vec![rarity.to_string()]);
+        if let Some(rarities) = params.rarities {
+            tcg_req = tcg_req.with_rarities(vec![rarities.to_string()]);
         }
 
         Client::new()

@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Deserialize)]
 pub struct PriceParams {
     pub subject: String,
-    pub rarity: Option<String>,
+    pub rarities: Option<String>,
     pub product: Option<String>,
 }
 
@@ -21,11 +21,22 @@ pub struct TCGPriceRequest {
     context: TCGPriceContext,
 }
 
+#[allow(dead_code)]
 impl TCGPriceRequest {
-    pub fn with_filter_term(mut self, filter_name: &str, filter_values: Vec<String>) -> Self {
+    pub fn with_yugioh_product_line(mut self) -> Self {
         self.filters
             .term
-            .insert(filter_name.to_string(), filter_values);
+            .insert("productLineName".to_string(), vec!["yugioh".to_string()]);
+        self
+    }
+
+    pub fn with_rarities(mut self, rarities: Vec<String>) -> Self {
+        self.filters.term.insert("rarityName".to_string(), rarities);
+        self
+    }
+
+    pub fn with_sets(mut self, sets: Vec<String>) -> Self {
+        self.filters.term.insert("setName".to_string(), sets);
         self
     }
 }
@@ -102,17 +113,24 @@ impl Default for TCGPriceContext {
     }
 }
 
+/*
+ * Response
+ */
+
+#[allow(dead_code)]
 #[derive(Deserialize, Debug)]
 pub struct TCGPriceResponse {
     #[serde(rename = "results")]
     data: Vec<TCGPriceData>,
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize, Debug)]
 struct TCGPriceData {
     results: Vec<TCGPriceResults>,
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 struct TCGPriceResults {
