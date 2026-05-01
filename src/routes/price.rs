@@ -94,8 +94,7 @@ fn parse_tcg_card_prices(tcg_prices: TCGPriceResponse, subject: &str) -> Vec<Car
         .results
         .iter()
         .filter(|price| {
-            let matches =
-                price.product_name.to_lowercase().starts_with(subject_prefix) || price.product_name.to_lowercase().starts_with(subject);
+            let matches = price.product_name.to_lowercase().starts_with(subject_prefix) || price.product_name.to_lowercase() == subject;
             if !matches {
                 warn!(name = price.product_name, "Item skipped");
             }
