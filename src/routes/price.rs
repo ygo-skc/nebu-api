@@ -1,9 +1,8 @@
 use axum::{Json, extract::Query};
-use reqwest::Client;
-use reqwest::Response;
+use reqwest::{Client, Response};
 use serde::Deserialize;
-use tracing::error;
-use tracing::info;
+use std::time::Instant;
+use tracing::{error, info};
 
 use crate::models::{APIError, CardPrice, CardPriceResponse, Config, TCGPriceRequest, TCGPriceResponse};
 
@@ -22,18 +21,21 @@ pub async fn get_card_prices(Query(params): Query<PriceParams>) -> Result<Json<C
         "Fetching card prices"
     );
 
-    let res = {
-        let mut tcg_req = TCGPriceRequest::default().with_yugioh_product_line();
+    let tcg_price = {
+        let tcg_req = {
+            let mut tcg_req = TCGPriceRequest::default().with_yugioh_product_line();
 
-        if let Some(rarities) = params.rarities {
-            tcg_req = tcg_req.with_rarities(rarities.split(",").map(String::from).collect());
-        }
-        if let Some(sets) = params.sets {
-            tcg_req = tcg_req.with_sets(sets.split(",").map(String::from).collect())
-        }
+            if let Some(rarities) = params.rarities {
+                tcg_req = tcg_req.with_rarities(rarities.split(",").map(String::from).collect());
+            }
+            if let Some(sets) = params.sets {
+                tcg_req = tcg_req.with_sets(sets.split(",").map(String::from).collect())
+            }
+            tcg_req
+        };
 
-        let tcg_req = tcg_req;
-        Client::new()
+        let timer = Instant::now();
+        let res = Client::new()
             .post(format!("https://{}/v1/search/request", Config::load().tcg_price_api_host))
             .query(&[("q", params.subject.as_str()), ("isList", "false")])
             .json(&tcg_req)
@@ -44,24 +46,28 @@ pub async fn get_card_prices(Query(params): Query<PriceParams>) -> Result<Json<C
                 APIError {
                     message: "Error retrieving prices".to_string(),
                 }
-            })?
+            })?;
+
+        let tcg_price = handle_errors(res).await?;
+        info!(duration_ms = timer.elapsed().as_millis(), "TCG request completed");
+        tcg_price
     };
 
     Ok(Json(CardPriceResponse {
-        prices: parse_tcg_card_prices(handle_errors(res).await?, &params.subject),
+        prices: parse_tcg_card_prices(tcg_price, params.subject.as_str()),
     }))
 }
 
 async fn handle_errors(tcg_res: Response) -> Result<TCGPriceResponse, APIError> {
     if tcg_res.status() != 200 {
-        error!("Expected 200 code, but received {}", tcg_res.status());
+        error!(status_code = %tcg_res.status(), "Unexpected http code");
         return Err(APIError {
             message: "Error retrieving prices".to_string(),
         });
     }
 
     let body = tcg_res.json::<TCGPriceResponse>().await.map_err(|e| {
-        error!("Failed to de-searialize response: {e}");
+        error!(error = %e, "Failed to de-searialize response");
         APIError {
             message: "Error de-searializing price response".to_string(),
         }
@@ -69,7 +75,10 @@ async fn handle_errors(tcg_res: Response) -> Result<TCGPriceResponse, APIError> 
 
     let num_data_elements = body.data.len();
     if num_data_elements != 1 {
-        error!("Number of data elements isn't 1 as expected. It's {}", num_data_elements,);
+        error!(
+            num_date_elements = num_data_elements,
+            "Number of data elements isn't expected value 1"
+        );
         return Err(APIError {
             message: "Unexpected TCG price response state".to_string(),
         });
