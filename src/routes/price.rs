@@ -35,7 +35,7 @@ pub async fn get_card_prices(Query(params): Query<PriceParams>) -> Result<Json<C
         let tcg_req = tcg_req;
         Client::new()
             .post(format!("https://{}/v1/search/request", Config::load().tcg_price_api_host))
-            .query(&[("q", params.subject), ("isList", "false".to_string())])
+            .query(&[("q", params.subject.as_str()), ("isList", "false")])
             .json(&tcg_req)
             .send()
             .await
@@ -48,7 +48,7 @@ pub async fn get_card_prices(Query(params): Query<PriceParams>) -> Result<Json<C
     };
 
     Ok(Json(CardPriceResponse {
-        prices: parse_tcg_card_prices(handle_errors(res).await?),
+        prices: parse_tcg_card_prices(handle_errors(res).await?, &params.subject),
     }))
 }
 
@@ -78,15 +78,23 @@ async fn handle_errors(tcg_res: Response) -> Result<TCGPriceResponse, APIError> 
     Ok(body)
 }
 
-fn parse_tcg_card_prices(tcg_prices: TCGPriceResponse) -> Vec<CardPrice> {
+fn parse_tcg_card_prices(tcg_prices: TCGPriceResponse, subject: &str) -> Vec<CardPrice> {
+    let subject_prefix = &format!("{} (", subject.to_lowercase());
+
     tcg_prices.data[0]
         .results
         .iter()
-        .filter_map(|item| {
+        .filter(|price| {
+            price.product_name.to_lowercase().starts_with(subject_prefix) || price.product_name.to_lowercase().starts_with(subject)
+        })
+        .filter_map(|price| {
+            let lowest_price = price.lowest_price?;
+
             Some(CardPrice {
-                set: item.set_name.clone(),
-                rarity: item.rarity_name.clone()?,
-                market_price: item.market_price.unwrap_or(item.lowest_price?),
+                set: price.set_name.clone(),
+                rarity: price.rarity_name.clone()?,
+                lowest_price: price.lowest_price_with_shipping.unwrap_or(lowest_price),
+                market_price: price.market_price.unwrap_or(lowest_price),
             })
         })
         .collect()

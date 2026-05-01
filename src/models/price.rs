@@ -11,5 +11,6 @@ pub struct CardPriceResponse {
 pub struct CardPrice {
     pub set: String,
     pub rarity: String,
+    pub lowest_price: f32,
     pub market_price: f32,
 }

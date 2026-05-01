@@ -181,6 +181,7 @@ pub struct TCGPriceData {
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct TCGPriceResults {
+    pub product_name: String,
     pub set_name: String,
     pub rarity_name: Option<String>,
     pub lowest_price: Option<f32>,
