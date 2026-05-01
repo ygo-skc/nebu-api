@@ -2,7 +2,7 @@ use axum::{Json, extract::Query};
 use reqwest::{Client, Response};
 use serde::Deserialize;
 use std::time::Instant;
-use tracing::{error, info};
+use tracing::{error, info, warn};
 
 use crate::models::{APIError, CardPrice, CardPriceResponse, Config, TCGPriceRequest, TCGPriceResponse};
 
@@ -94,7 +94,12 @@ fn parse_tcg_card_prices(tcg_prices: TCGPriceResponse, subject: &str) -> Vec<Car
         .results
         .iter()
         .filter(|price| {
-            price.product_name.to_lowercase().starts_with(subject_prefix) || price.product_name.to_lowercase().starts_with(subject)
+            let matches =
+                price.product_name.to_lowercase().starts_with(subject_prefix) || price.product_name.to_lowercase().starts_with(subject);
+            if !matches {
+                warn!(name = price.product_name, "Item skipped");
+            }
+            matches
         })
         .filter_map(|price| {
             let lowest_price = price.lowest_price?;
