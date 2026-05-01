@@ -33,6 +33,13 @@ impl TCGPriceRequest {
         self.filters.term.insert("setName".to_string(), sets);
         self
     }
+
+    pub fn as_card(mut self) -> Self {
+        self.filters
+            .term
+            .insert("productTypeName".to_string(), vec!["Cards".to_string()]);
+        self
+    }
 }
 
 impl Default for TCGPriceRequest {

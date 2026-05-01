@@ -31,7 +31,7 @@ pub async fn get_card_prices(Query(params): Query<PriceParams>) -> Result<Json<C
             if let Some(sets) = params.sets {
                 tcg_req = tcg_req.with_sets(sets.split(",").map(String::from).collect())
             }
-            tcg_req
+            tcg_req.as_card()
         };
 
         let timer = Instant::now();
